@@ -1,11 +1,11 @@
 <div align="center">
 
-# 🏸 Badminton Analysis Agentic System 🏸
+# 🏸 Badminton AI LangGraph Analysis 🏸
 
 **✨ A Multi-Agent AI System for Advanced Badminton Match Analysis ✨**
 
 [![Made with AI](https://img.shields.io/badge/Made_with-AI_&_Python-blueviolet?style=for-the-badge&logo=python)](https://www.python.org/)
-[![Framework](https://img.shields.io/badge/Framework-LangGraph-orange?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDI1NiAyNTYiPgo8cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNMTE3LjIsMjU2bC0zMy45LTYwLjJMMTMyLjgsMTc1TDExNy4yLDI1NnoiLz4KPHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTk3LjMsMTY4LjRsLTM0LjgsNjEuNkwyOC42LDE3NWwzMy45LDYwLjJMOTcuMywxNjh6Ii8+CjxwYXRoIGZpbGw9IiNmZmZmZmYiIGQ9Ik0xMzguOCwyNTZsMzMuOS02MC4yTDEyMy4yLDE3NWwxNS42LDgwLjZMMTM4LjgsMjU2eiIvPgo8cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNMTE3LjIsMGwzMy45LDYwLjJMODMuMiw4MS4yTDExNy4yLDB6Ii8+CjxwYXRoIGZpbGw9IiNmZmZmZmYiIGQ9Ik0xNTguNyw5Ny4zbDM0LjgtNjEuNkwxMjUuMyw4MS4ybDY4LjIsMTUuOEwxNTguNyw5Ny4zeiIvPgo8cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNNzguOCwwTDQ0LjksNjAuMkw5NC40LDgxLjJMNzguOCwweiIvPgo8L3N2Zz4K)]
+![Framework](https://img.shields.io/badge/Framework-LangGraph-orange?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDI1NiAyNTYiPgo8cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNMTE3LjIsMjU2bC0zMy45LTYwLjJMMTMyLjgsMTc1TDExNy4yLDI1NnoiLz4KPHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTk3LjMsMTY4LjRsLTM0LjgsNjEuNkwyOC42LDE3NWwzMy45LDYwLjJMOTcuMywxNjh6Ii8+CjxwYXRoIGZpbGw9IiNmZmZmZmYiIGQ9Ik0xMzguOCwyNTZsMzMuOS02MC4yTDEyMy4yLDE3NWwxNS42LDgwLjZMMTM4LjgsMjU2eiIvPgo8cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNMTE3LjIsMGwzMy45LDYwLjJMODMuMiw4MS4yTDExNy4yLDB6Ii8+CjxwYXRoIGZpbGw9IiNmZmZmZmYiIGQ9Ik0xNTguNyw5Ny4zbDM0LjgtNjEuNkwxMjUuMyw4MS4ybDY4LjIsMTUuOEwxNTguNyw5Ny4zeiIvPgo8cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNNzguOCwwTDQ0LjksNjAuMkw5NC40LDgxLjJMNzguOCwweiIvPgo8L3N2Zz4K)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](./LICENSE)
 
 </div>
@@ -31,18 +31,9 @@ The system uses a modular, agent-based architecture where each component has a s
 
 <div align="center">
 
-```mermaid
-graph TD
-    A[Input: YouTube Video] --> B{Parallel Data Pipeline (Dask)};
-    B --> C[🏸 Video Frame Extraction];
-    C --> D{LangGraph Orchestrator};
-    subgraph Agentic Core
-    D -- video_frames --> E[🎥 Video Analysis Agent];
-    E -- pose_data --> F[🧠 Strategy Analysis Agent];
-    F -- report --> G[📄 Report Generation Agent];
-    end
-    G --> H[✅ Final Analysis Report];
-```
+
+```mermaid graph TD A[Input: YouTube Video] --> B[Parallel Data Pipeline (Dask)] B --> C[Video Frame Extraction] C --> D[LangGraph Orchestrator] subgraph Agentic Core D --> E[Video Analysis Agent] E --> F[Strategy Analysis Agent] F --> G[Report Generation Agent] end G --> H[Final Analysis Report] ``` </pre>
+
 
 </div>
 
