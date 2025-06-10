@@ -23,7 +23,7 @@ This project is an advanced, multi-agent system designed to analyze badminton ma
 💻 Runs entirely on CPU
 ```
 
---- 
+
 
 ## 📊 **System Architecture**
 
@@ -52,9 +52,7 @@ flowchart TD
 </div>
 
 
-</div>
 
---- 
 
 ## 🚀 **Getting Started**
 
@@ -69,7 +67,7 @@ Follow these steps to get the project up and running on your local machine.
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/Shree2604/Badminton-AI-LangGraph-Analysis.git
 cd badminton-analysis-system
 
 # Create and activate a virtual environment
