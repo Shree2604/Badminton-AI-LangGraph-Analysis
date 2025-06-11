@@ -33,24 +33,28 @@ The system uses a modular, agent-based architecture where each component has a s
 
 ```mermaid
 flowchart TD
-    A[Input: YouTube Video] --> B[Parallel Data Pipeline (Dask)]
-    B --> C[Video Frame Extraction]
-    C --> D[LangGraph Orchestrator]
+    A[📹 Input: YouTube Video] --> B[⚡ Parallel Data Pipeline]
+    B --> C[🎬 Video Frame Extraction]
+    C --> D[🎭 LangGraph Orchestrator]
     
-    subgraph Agentic Core
-        E[Video Analysis Agent]
-        F[Strategy Analysis Agent]
-        G[Report Generation Agent]
+    subgraph "🤖 Agentic Core"
+        E[👁️ Video Analysis Agent]
+        F[🧠 Strategy Analysis Agent]
+        G[📝 Report Generation Agent]
     end
     
     D --> E
     E --> F
     F --> G
-    G --> H[Final Analysis Report]
+    G --> H[📊 Final Analysis Report]
+    
+    style A fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style B fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style D fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style H fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
 ```
 
 </div>
-
 
 
 
