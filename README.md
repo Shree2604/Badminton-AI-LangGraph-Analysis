@@ -55,8 +55,6 @@
    pip install -r requirements.txt
    ```
 
-## 🚀 Quick Start
-
 ## 🚀 Quick Start Guide
 
 ### Option 1: Simple Video Analysis
@@ -152,29 +150,8 @@ badminton-ai-langgraph/
   <p><em>Figure: Example of pose detection on a badminton player showing key joint tracking</em></p>
 </div>
 
-### Key Features Demonstrated:
 
-- **Real-time Pose Tracking**: 33 key body points with MediaPipe
-- **Stroke Analysis**: Detect and analyze different badminton strokes
-- **Movement Patterns**: Track player positioning and footwork
-- **Performance Metrics**: Calculate speed, reach, and form metrics
 
-## 🛠 Technical Details
-
-### Video Processing Pipeline
-
-1. **Frame Extraction**: Efficiently sample frames from the input video
-2. **Pose Detection**: Use MediaPipe to detect and track body keypoints
-3. **Analysis**: Process keypoints to extract meaningful metrics
-4. **Visualization**: Generate annotated video with pose overlays
-5. **Reporting**: Create detailed performance reports
-
-### Performance Optimization
-
-- Multi-threaded frame processing
-- Batch processing for efficient GPU utilization
-- Smart frame sampling to reduce processing time
-- Memory-efficient video handling
 
 ## 🤝 Contributing
 
@@ -198,13 +175,6 @@ We welcome contributions! Here's how you can help:
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [MediaPipe](https://mediapipe.dev/) for robust pose estimation
-- [OpenCV](https://opencv.org/) for computer vision capabilities
-- [LangChain](https://python.langchain.com/) for workflow orchestration
-- [Google Gemini](https://gemini.google.com/) for AI-powered insights
 
 ## 📬 Contact
 
