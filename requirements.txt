@@ -8,3 +8,5 @@ moviepy>=1.0.3
 pydub>=0.25.1
 tqdm>=4.66.0
 google-generativeai>=0.3.0
+reportlab>=4.0.0
+psutil>=5.9.0
