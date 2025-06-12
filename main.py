@@ -9,18 +9,16 @@ import sys
 import logging
 import shutil
 import platform
+import multiprocessing
 from datetime import datetime
 from pathlib import Path
 from typing import List, Literal, Optional, Dict, Any, Tuple, Callable, Union
 
-# Set up logging
+# Set up logging - only to console
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('badminton_analysis.log')
-    ]
+    handlers=[logging.StreamHandler()]  # Only log to console
 )
 logger = logging.getLogger(__name__)
 
@@ -80,91 +78,159 @@ def print_header(title: str):
 
 
 def get_video_path() -> str:
-    """Prompt user for video file path with validation."""
+    """Get video file path from command line arguments or prompt user."""
+    import sys
+    
+    # Check if video path is provided as command line argument
+    if len(sys.argv) > 1 and os.path.isfile(sys.argv[-1]):
+        return os.path.abspath(sys.argv[-1])
+    
+    # If not, prompt user for video path
     while True:
-        video_path = input("\n📹 Enter the path to your badminton video file: ").strip('"')
-        if os.path.isfile(video_path):
-            return video_path
-        print("❌ File not found. Please enter a valid file path.")
+        try:
+            video_path = input("\n[VIDEO] Enter the path to your badminton video file: ").strip('"')
+            if os.path.isfile(video_path):
+                return os.path.abspath(video_path)
+            print("[ERROR] File not found. Please enter a valid file path.")
+        except (EOFError, KeyboardInterrupt):
+            print("\n[ERROR] Input interrupted. Please provide a video path as a command line argument.")
+            print("Usage: python main.py [--api-key YOUR_API_KEY] path/to/your/video.mp4")
+            sys.exit(1)
 
 
 def get_gemini_key() -> str:
-    """Prompt user for Gemini API key."""
-    print("\n🔑 You'll need a Google Gemini API key to continue.")
-    print("   Get it from: https://aistudio.google.com/app/apikey")
+    """Get Gemini API key from command line arguments or prompt user."""
+    import sys
+    
+    # Check if API key is provided as command line argument
+    if len(sys.argv) > 2 and sys.argv[1] == "--api-key":
+        return sys.argv[2]
+    
+    # If not, prompt user for API key
+    print("\n[KEY] You'll need a Google Gemini API key to continue.")
+    print("You can get one at: https://aistudio.google.com/app/apikey")
+    
     while True:
-        api_key = input("\n🔑 Enter your Google Gemini API key: ").strip()
-        if api_key:
-            return api_key
-        print("❌ API key cannot be empty. Please try again.")
+        try:
+            api_key = input("\n[KEY] Enter your Google Gemini API key: ").strip()
+            if api_key:
+                return api_key
+            print("[ERROR] API key cannot be empty. Please try again.")
+        except (EOFError, KeyboardInterrupt):
+            print("\n[ERROR] Input interrupted. Please provide the API key as a command line argument.")
+            print("Usage: python main.py --api-key YOUR_API_KEY path/to/your/video.mp4")
+            sys.exit(1)
 
 
 def get_player_count() -> int:
-    """Prompt user for number of players."""
-    while True:
+    """Get number of players from command line arguments or use default."""
+    import sys
+    
+    # Check if player count is provided as command line argument
+    if '--players' in sys.argv:
         try:
-            count = int(input("\n👥 Enter number of players (1 or 2): "))
-            if count in (1, 2):
-                return count
-            print("❌ Please enter 1 or 2.")
+            idx = sys.argv.index('--players')
+            if idx + 1 < len(sys.argv):
+                count = int(sys.argv[idx + 1])
+                if count in (1, 2):
+                    return count
+                print("[ERROR] Number of players must be 1 or 2.")
+            else:
+                print("[ERROR] Missing value for --players argument.")
         except ValueError:
-            print("❌ Please enter a valid number (1 or 2).")
+            print("[ERROR] Invalid value for --players. Must be 1 or 2.")
+    
+    # Default to 1 player if not specified or invalid
+    print("[INFO] Defaulting to 1 player (use --players 1 or --players 2 to specify)")
+    return 1
 
 
 def get_roles() -> list[str]:
-    """Prompt user to select report roles."""
-    print("\n📋 Select which reports to generate:")
-    print("1. Coach Report (Detailed technical analysis)")
-    print("2. Student Report (Player-focused feedback)")
-    print("3. Parent Report (General progress summary)")
-    print("4. All Reports")
+    """Get report roles from command line arguments or use default."""
+    import sys
     
-    role_map = {
-        "1": ["coach"],
-        "2": ["student"],
-        "3": ["parent"],
-        "4": ["coach", "student", "parent"]
-    }
+    # Check if roles are provided as command line argument
+    if '--roles' in sys.argv:
+        try:
+            idx = sys.argv.index('--roles')
+            if idx + 1 < len(sys.argv):
+                roles = sys.argv[idx + 1].split(',')
+                valid_roles = ['coach', 'student', 'parent']
+                if all(role in valid_roles for role in roles):
+                    return roles
+                print(f"[ERROR] Invalid roles. Must be one or more of: {', '.join(valid_roles)}")
+            else:
+                print("[ERROR] Missing value for --roles argument.")
+        except Exception as e:
+            print(f"[ERROR] Invalid roles format: {str(e)}")
     
-    while True:
-        choice = input("\nEnter your choice (1-4): ").strip()
-        if choice in role_map:
-            return role_map[choice]
-        print("❌ Invalid choice. Please enter a number between 1 and 4.")
+    # Default to all roles if not specified or invalid
+    print("[INFO] Defaulting to all report types (use --roles coach,student,parent to specify)")
+    return ["coach", "student", "parent"]
 
+
+def get_language_name(lang_code: str) -> str:
+    """Convert language code to full name."""
+    languages = {
+        "en": "English",
+        "hi": "हिंदी (Hindi)",
+        "ta": "தமிழ் (Tamil)",
+        "te": "తెలుగు (Telugu)",
+        "kn": "ಕನ್ನಡ (Kannada)"
+    }
+    return languages.get(lang_code, lang_code)
 
 def get_language_choice() -> str:
-    """Prompt user to select a language from available options."""
+    """Get language choice from command line arguments or use default."""
+    import sys
+    
     languages = {
-        "1": {"code": "en", "name": "English"},
-        "2": {"code": "hi", "name": "हिंदी (Hindi)"},
-        "3": {"code": "ta", "name": "தமிழ் (Tamil)"},
-        "4": {"code": "te", "name": "తెలుగు (Telugu)"},
-        "5": {"code": "kn", "name": "ಕನ್ನಡ (Kannada)"}
+        "en": "English",
+        "hi": "हिंदी (Hindi)",
+        "ta": "தமிழ் (Tamil)",
+        "te": "తెలుగు (Telugu)",
+        "kn": "ಕನ್ನಡ (Kannada)"
     }
     
-    print("\n🌍 Select report language:")
-    for key, lang in languages.items():
-        print(f"{key}. {lang['name']}")
+    # Check if language is provided as command line argument
+    if '--language' in sys.argv:
+        idx = sys.argv.index('--language')
+        if idx + 1 < len(sys.argv):
+            lang = sys.argv[idx + 1]
+            if lang in languages:
+                return lang
+            print(f"[ERROR] Invalid language. Must be one of: {', '.join(languages.keys())}")
+        else:
+            print("[ERROR] Missing value for --language argument.")
     
-    while True:
-        choice = input("\nEnter your choice (1-5): ").strip()
-        if choice in languages:
-            return languages[choice]["code"]
-        print("❌ Invalid choice. Please enter a number between 1 and 5.")
+    # Default to English if not specified or invalid
+    print("[INFO] Defaulting to English (use --language en/hi/ta/te/kn to specify)")
+    return "en"
 
 
 def confirm_settings(settings: dict) -> bool:
-    """Display settings and confirm before proceeding."""
-    print_header("REVIEW SETTINGS")
+    """Display settings and confirm (auto-confirm if --yes flag is present)."""
+    import sys
+    
+    print_header("ANALYSIS SETTINGS")
     for key, value in settings.items():
         print(f"{key}: {value}")
     
-    while True:
-        confirm = input("\nStart analysis with these settings? (y/n): ").lower()
-        if confirm in ('y', 'n'):
-            return confirm == 'y'
-        print("❌ Please enter 'y' to continue or 'n' to cancel.")
+    # Auto-confirm if --yes flag is present
+    if '--yes' in sys.argv or '-y' in sys.argv:
+        print("\n[INFO] Auto-confirming settings (--yes flag detected)")
+        return True
+    
+    # Otherwise prompt for confirmation
+    try:
+        while True:
+            confirm = input("\nStart analysis with these settings? (y/n): ").lower()
+            if confirm in ('y', 'n'):
+                return confirm == 'y'
+            print("[ERROR] Please enter 'y' to continue or 'n' to cancel.")
+    except (EOFError, KeyboardInterrupt):
+        print("\n[ERROR] Input interrupted. Use --yes to skip confirmation.")
+        return False
 
 
 def ensure_directory(directory: str) -> Path:
@@ -382,19 +448,23 @@ Example: {video_name}_player1_coach_report.pdf
 
 def print_loading_bar(progress: int, total: int, message: str = ""):
     """Display a simple loading bar."""
-    bar_length = 40
-    filled_length = int(bar_length * progress / total)
-    bar = '█' * filled_length + '-' * (bar_length - filled_length)
-    percentage = int(100 * progress / total)
-    print(f"\r{message} [{bar}] {percentage}%", end="")
-    if progress == total:
-        print()  # New line when complete
+    try:
+        bar_length = 40
+        filled_length = int(bar_length * progress / total)
+        bar = '#' * filled_length + '-' * (bar_length - filled_length)
+        percentage = int(100 * progress / total)
+        print(f"\r{message} [{bar}] {percentage}%", end="", flush=True)
+        if progress == total:
+            print()  # New line when complete
+    except Exception as e:
+        # Fallback to simple progress message if progress bar fails
+        print(f"\r{message} - {progress}/{total} ({percentage}%)", end="", flush=True)
 
 
 def generate_pdf_report(txt_path: str, output_dir: Path, role: str, language: str) -> Optional[str]:
     """Generate a PDF version of the text report."""
     try:
-        print(f"   📄 Creating PDF for {Path(txt_path).name}...")
+        print(f"   [PDF] Creating PDF for {Path(txt_path).name}...")
         pdf_path = convert_txt_to_pdf(
             txt_path=txt_path,
             output_dir=output_dir,
@@ -436,7 +506,7 @@ async def generate_reports(
         pdf_dir.mkdir(parents=True, exist_ok=True)
         
         # Run the analysis pipeline with progress updates
-        print("\n🔍 Analyzing video...")
+        print("\n[ANALYSIS] Analyzing video...")
         analysis_results = await run_analysis(video_path, api_key=gemini_key)
         
         # Generate reports for each role and player
@@ -455,7 +525,7 @@ async def generate_reports(
                     completed += 1
                     print_loading_bar(
                         completed, total_reports,
-                        f"📝 Generating {role} report for Player {player_num}..."
+                        f"[REPORT] Generating {role} report for Player {player_num}..."
                     )
                     
                     # Generate and save text report
@@ -502,8 +572,27 @@ async def generate_reports(
         raise
 
 
+def show_help():
+    """Display help message with command line options."""
+    print("\nBadminton AI Analysis Tool - Command Line Options:")
+    print("  --api-key KEY       Google Gemini API key (required)")
+    print("  --players N         Number of players (1 or 2, default: 1)")
+    print("  --roles ROLES       Comma-separated list of roles (coach,student,parent, default: all)")
+    print("  --language LANG     Report language (en,hi,ta,te,kn, default: en)")
+    print("  --yes / -y          Skip confirmation prompts")
+    print("  --help              Show this help message")
+    print("\nExample:")
+    print("  python main.py --api-key YOUR_KEY --players 2 --roles coach,student --language en sample.mp4")
+    sys.exit(0)
+
 async def main_async():
     """Async main entry point for the parallel badminton analysis."""
+    import sys
+    
+    # Show help if requested
+    if '--help' in sys.argv or '-h' in sys.argv:
+        show_help()
+    
     clear_screen()
     print_header("PARALLEL BADMINTON AI ANALYSIS TOOL")
     
@@ -579,23 +668,34 @@ async def main_async():
             roles=roles,
             locale=locale
         )
-        print(f"✅ Analysis completed successfully!")
-        print(f"📄 Reports are available in: {output_dir.resolve()}")
-        print("="*60)
+        print(f"[SUCCESS] Analysis completed successfully!")
+        print(f"[DONE] Reports are available in: {output_dir.resolve()}")
         
-        input("\nPress Enter to exit...")
-        
+        try:
+            # Skip waiting for input in non-interactive mode
+            if '--yes' not in sys.argv and '-y' not in sys.argv:
+                try:
+                    input("\nPress Enter to exit...")
+                except (EOFError, KeyboardInterrupt):
+                    pass
+        except KeyboardInterrupt:
+            print("\n\n[CANCELLED] Operation cancelled by user.")
+        except Exception as e:
+            logger.error(f"An error occurred: {str(e)}", exc_info=True)
+            print(f"\n[ERROR] An error occurred: {str(e)}")
+            print("Check the log file for more details.")
+        finally:
+            # Clean up resources if needed
+            pass
+        logger.info("Analysis completed successfully")
     except KeyboardInterrupt:
-        print("\n\n❌ Operation cancelled by user.")
+        print("\n\n[CANCELLED] Operation cancelled by user.")
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}", exc_info=True)
-        print(f"\n❌ An error occurred: {str(e)}")
+        print(f"\n[ERROR] An error occurred: {str(e)}")
         print("Check the log file for more details.")
         input("\nPress Enter to exit...")
     
-    logger.info("Analysis completed successfully")
-
-
 def main():
     """Synchronous entry point that runs the async main function."""
     try:

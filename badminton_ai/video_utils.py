@@ -149,9 +149,8 @@ class VideoProcessor:
             cap.release()
             cv2.destroyAllWindows()
 
-    @lru_cache(maxsize=100)
     def _preprocess_frame(self, frame: np.ndarray) -> np.ndarray:
-        """Preprocess frame with caching"""
+        """Preprocess frame"""
         # Convert to RGB and resize
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return cv2.resize(

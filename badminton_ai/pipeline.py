@@ -195,16 +195,22 @@ def build_pipeline(api_key: str):
         """Generate final report with error handling."""
         logger.info("[STEP] Generating final report...")
         try:
+            # Initialize Gemini with the API key if not already done
+            from badminton_ai.report_generator import init_gemini
+            init_gemini(api_key)
+            
             report = await asyncio.to_thread(
                 generate_report,
-                state.get("pose", []),
-                state.get("transcript", ""),
-                api_key=api_key
+                pose_metrics=state.get("pose_metrics", []),
+                transcription=state.get("transcript", ""),
+                role="coach",  # Default role, can be customized based on state if needed
+                player_num=1,    # Default player number
+                locale="en"      # Default locale
             )
             return {"report": report, "errors": state.get("errors", [])}
         except Exception as e:
             error_msg = f"Report generation failed: {str(e)}"
-            logger.error(error_msg)
+            logger.error(error_msg, exc_info=True)
             return {"errors": state.get("errors", []) + [{"step": "report_generation", "error": error_msg}]}
 
     # Add nodes to graph with proper error handling
@@ -297,18 +303,19 @@ async def run_analysis(
         if not result:
             raise ValueError("Pipeline execution returned no results")
         
-        # Calculate performance metrics
-        end_time = asyncio.get_event_loop().time()
-        duration = end_time - start_time
+        # Calculate execution time
+        execution_time = (datetime.now() - start_time).total_seconds()
         
-        # Add metadata to results
-        result["metadata"] = {
-            "execution_time_seconds": duration,
-            "success": not bool(result.get("errors")),
-            "timestamp": end_time,
-            "system_metrics": {
-                "cpu_usage_percent": psutil.cpu_percent(),
-                "memory_usage_percent": psutil.virtual_memory().percent
+        # Prepare final result
+        result = {
+            "analysis": result,
+            "metadata": {
+                "success": True,
+                "execution_time_seconds": execution_time,
+                "frames_processed": len(initial_state.get("frames", [])),
+                "timestamp": datetime.now().isoformat(),
+                "sample_rate": sample_rate,
+                "target_size": target_size
             }
         }
         
@@ -321,12 +328,13 @@ async def run_analysis(
         logger.exception(error_msg)
         
         # Return error state
+        execution_time = (datetime.now() - start_time).total_seconds()
         return {
             "errors": [{"step": "pipeline_execution", "error": error_msg}],
             "metadata": {
                 "success": False,
                 "error": error_msg,
-                "execution_time_seconds": asyncio.get_event_loop().time() - start_time,
-                "timestamp": asyncio.get_event_loop().time()
+                "execution_time_seconds": execution_time,
+                "timestamp": datetime.now().isoformat()
             }
         }
