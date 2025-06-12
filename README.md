@@ -17,7 +17,7 @@
 ## 🏗️ System Architecture
 
 <div align="center">
-  <img src="./docs/architecture.png" alt="System Architecture" width="800"/>
+  <img src="./docs/architecture.png" alt="System Architecture" width="400"/>
   <p><em>Figure: High-level architecture of the Badminton AI Analysis system</em></p>
 </div>
 
