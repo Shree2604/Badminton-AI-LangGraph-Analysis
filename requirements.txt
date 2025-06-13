@@ -51,7 +51,7 @@ langgraph-sdk==0.1.70
 langsmith==0.3.45
 MarkupSafe==3.0.2
 matplotlib==3.9.4
-mediapipe==0.10.21
+mediapipe>=0.10.15
 ml_dtypes==0.5.1
 mpmath==1.3.0
 networkx==3.2.1
