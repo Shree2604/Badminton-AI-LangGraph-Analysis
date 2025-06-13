@@ -3,7 +3,7 @@ services:
     name: badminton-ai-analysis
     env: python
     buildCommand: pip install -r web_app/requirements.txt
-    startCommand: gunicorn web_app.app:app
+    startCommand: gunicorn web_app.app:app --timeout 300 --workers 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
