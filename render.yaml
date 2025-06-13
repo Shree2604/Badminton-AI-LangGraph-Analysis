@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: badminton-ai-analysis
+    env: python
+    buildCommand: pip install -r web_app/requirements.txt
+    startCommand: gunicorn web_app.app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+    plan: free
+    disk:
+      name: badminton-ai-disk
+      mountPath: /opt/render/project/src/web_app/uploads
+      sizeGB: 1
+    envVars:
+      - key: FLASK_APP
+        value: web_app/app.py
+      - key: FLASK_ENV
+        value: production
