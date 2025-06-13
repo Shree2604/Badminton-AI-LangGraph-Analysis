@@ -145,9 +145,11 @@ def generate_report(
         - Reference the pose data when relevant (confidence > 0.3)
         - Include timestamps for key moments when possible
         - Provide concrete examples from the match
-        - Keep the tone professional but approachable
-        - Use bullet points for clarity
-        - Focus on observable behaviors and metrics
+        - Keep the tone professional, encouraging, and approachable.
+        - Use bullet points for clarity.
+        - Focus on observable behaviors and metrics.
+        - Provide positive reinforcement where applicable.
+        - Ensure suggestions are practical and actionable, even if the input data is limited.
         """)
         
         # Generate the report
@@ -155,9 +157,9 @@ def generate_report(
         prompt = f"{system_prompt}\n\nAnalysis Data (first 100 pose metrics shown):\n{json.dumps(analysis_data, indent=2)[:2000]}"
         
         response = model.generate_content(prompt)
-        report = response.text
+        report = response.text.replace('*', '')
         
-        # Add header and format
+        # Add header and format in the correct language
         locale_names = {
             'en': 'English',
             'hi': 'हिंदी',
@@ -166,11 +168,17 @@ def generate_report(
             'kn': 'ಕನ್ನಡ'
         }
         
-        header = (f"బ్యాడ్మింటన్ విశ్లేషణ నివేదిక\n"  # Header in Telugu by default
-                 f"పాత్ర: {role.title()}\n"
-                 f"ఆటగాడు: {player_num}\n"
-                 f"భాష: {locale_names.get(locale, locale)}\n"
-                 f"{'='*50}\n\n")
+        # Headers in different languages
+        headers = {
+            'en': f"Badminton Analysis Report\nRole: {role.title()}\nPlayer: {player_num}\nLanguage: {locale_names.get(locale, locale)}\n{'='*50}\n\n",
+            'hi': f"बैडमिंटन विश्लेषण रिपोर्ट\nभूमिका: {role.title()}\nखिलाड़ी: {player_num}\nभाषा: {locale_names.get(locale, locale)}\n{'='*50}\n\n",
+            'ta': f"பேட்மிண்டன் பகுப்பாய்வு அறிக்கை\nபங்கு: {role.title()}\nவீரர்: {player_num}\nமொழி: {locale_names.get(locale, locale)}\n{'='*50}\n\n",
+            'te': f"బ్యాడ్మింటన్ విశ్లేషణ నివేదిక\nపాత్ర: {role.title()}\nఆటగాడు: {player_num}\nభాష: {locale_names.get(locale, locale)}\n{'='*50}\n\n",
+            'kn': f"ಬ್ಯಾಡ್ಮಿಂಟನ್ ವಿಶ್ಲೇಷಣೆ ವರದಿ\nಪಾತ್ರ: {role.title()}\nಆಟಗಾರ: {player_num}\nಭಾಷೆ: {locale_names.get(locale, locale)}\n{'='*50}\n\n"
+        }
+        
+        # Use the header in the correct language, fallback to English if not available
+        header = headers.get(locale, headers['en'])
         
         # Ensure the report is in the correct language
         if locale != 'en':

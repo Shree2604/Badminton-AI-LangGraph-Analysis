@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badminton AI Analysis</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/000000/badminton.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/48/000000/badminton.png">
+    <link rel="shortcut icon" href="https://img.icons8.com/color/48/000000/badminton.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Dark Theme CSS -->
+    <link href="/static/css/dark-theme.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background Elements -->
+    <div class="bg-elements">
+        <div class="shuttlecock"></div>
+        <div class="shuttlecock"></div>
+        <div class="shuttlecock"></div>
+        <div class="shuttlecock"></div>
+        <div class="shuttlecock"></div>
+        <div class="shuttlecock"></div>
+    </div>
+
+    <!-- Court Lines -->
+    <div class="court-lines">
+        <div class="court-line horizontal" style="top: 20%;"></div>
+        <div class="court-line horizontal" style="top: 50%;"></div>
+        <div class="court-line horizontal" style="top: 80%;"></div>
+        <div class="court-line vertical" style="left: 20%;"></div>
+        <div class="court-line vertical" style="left: 50%;"></div>
+        <div class="court-line vertical" style="right: 20%;"></div>
+    </div>
+
+    <div class="container main-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="badminton-icon">
+                <i class="fas fa-table-tennis"></i>
+            </div>
+            <h1>Badminton AI LangGraph Analysis</h1>
+            <p class="subtitle">Advanced Performance Analytics</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <form id="analysisForm" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="videoFile" class="form-label">
+                                <i class="fas fa-video icon-video"></i>
+                                Upload Video File
+                            </label>
+                            <input type="file" class="form-control" id="videoFile" name="video_file" accept="video/*" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="language" class="form-label">
+                                <i class="fas fa-globe icon-language"></i>
+                                Report Language
+                            </label>
+                            <select class="form-select" id="language" name="language" required>
+                                <option value="en">🇺🇸 English</option>
+                                <option value="hi">🇮🇳 हिंदी (Hindi)</option>
+                                <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
+                                <option value="te">🇮🇳 తెలుగు (Telugu)</option>
+                                <option value="kn">🇮🇳 ಕನ್ನಡ (Kannada)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="playerNum" class="form-label">
+                                <i class="fas fa-users icon-users"></i>
+                                Number of Players
+                            </label>
+                            <select class="form-select" id="playerNum" name="player_num" required>
+                                <option value="1">👤 1 Player (Singles)</option>
+                                <option value="2">👥 2 Players (Doubles)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="apiKey" class="form-label">
+                                <i class="fas fa-key icon-key"></i>
+                                API Key
+                            </label>
+                            <input type="password" class="form-control" id="apiKey" name="api_key" placeholder="Enter your Gemini API Key" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="role" class="form-label">
+                                <i class="fas fa-user-tag icon-user"></i>
+                                Your Role
+                            </label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="student">🎓 Student</option>
+                                <option value="coach">🏆 Coach</option>
+                                <option value="parent">👨‍👩‍👧‍👦 Parent</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 2rem;">
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-rocket"></i>
+                                Generate Analysis Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Processing State -->
+        <div id="processingState" class="state-container" style="display: none;">
+            <div class="processing-header">
+                <div class="processing-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h3>Processing Your Video</h3>
+                <p class="subtitle">This may take a few moments. Please wait while we analyze your badminton performance.</p>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%;" 
+                         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div id="progressText" class="progress-text">Initializing analysis...</div>
+            </div>
+        </div>
+
+        <!-- Report Output -->
+        <div id="reportState" class="state-container" style="display: none;">
+            <div class="report-header">
+                <h3>
+                    <i class="fas fa-chart-line"></i>
+                    Your Performance Analysis
+                </h3>
+                <p class="report-subtitle">Generated on <span id="reportDate"></span></p>
+            </div>
+            
+            <div class="report-actions">
+                <button id="newAnalysisBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-redo"></i> New Analysis
+                </button>
+                <a href="#" id="downloadPdfLink" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Download PDF Report
+                </a>
+            </div>
+            
+            <div class="report-content-container" style="max-height: 70vh; overflow-y: auto;">
+                <div id="reportContent" class="report-content"></div>
+            </div>
+        </div>
+            <div id="pdfReportLink" style="display: none;">
+                <a href="#" id="downloadPdfLink" target="_blank" class="download-btn">
+                    <i class="fas fa-download"></i>
+                    Download PDF Report
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // DOM Elements
+        const analysisForm = document.getElementById('analysisForm');
+        const formCard = document.querySelector('.form-card');
+        const processingState = document.getElementById('processingState');
+        const reportState = document.getElementById('reportState');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const reportDate = document.getElementById('reportDate');
+        const newAnalysisBtn = document.getElementById('newAnalysisBtn');
+        const downloadPdfLink = document.getElementById('downloadPdfLink');
+        const reportContent = document.getElementById('reportContent');
+
+        // Add dark theme class to body
+        document.body.classList.add('dark-theme');
+
+        // Show state function with enhanced animations
+        function showState(stateElement) {
+            // Hide all states first with fade out
+            [formCard, processingState, reportState].forEach(el => {
+                if (el.style.display !== 'none') {
+                    el.style.opacity = '0';
+                    setTimeout(() => {
+                        el.style.display = 'none';
+                    }, 300);
+                }
+            });
+            
+            // Show the target state with fade in
+            if (stateElement) {
+                setTimeout(() => {
+                    stateElement.style.display = 'block';
+                    stateElement.style.opacity = '0';
+                    
+                    // Trigger reflow
+                    void stateElement.offsetHeight;
+                    
+                    stateElement.style.opacity = '1';
+                    stateElement.classList.add('active');
+                }, 350);
+            }
+        }
+
+        // Update progress function with smoother animations
+        function updateProgress(progress, status) {
+            // Update progress bar with smooth animation
+            if (progress !== undefined) {
+                progressBar.style.transition = 'width 0.8s ease-in-out';
+                progressBar.style.width = `${progress}%`;
+                progressBar.setAttribute('aria-valuenow', progress);
+            }
+            
+            // Update progress text with fade effect
+            if (status) {
+                progressText.style.opacity = '0';
+                setTimeout(() => {
+                    progressText.textContent = status;
+                    progressText.style.opacity = '1';
+                }, 300);
+            }
+        }
+
+        // Set report date
+        function setReportDate() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            reportDate.textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // New analysis button handler
+        newAnalysisBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Reset form
+            analysisForm.reset();
+            
+            // Reset steps
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active', 'completed');
+                step.querySelector('.step-status').textContent = 'Waiting...';
+            });
+            
+            // Show first step as active
+            document.getElementById('step1').classList.add('active');
+            
+            // Show form with animation
+            showState(formCard);
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Form submission handler
+        analysisForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            // Show processing state with animation
+            showState(processingState);
+            
+            // Set initial progress with animation
+            updateProgress(10, 'Uploading video...');
+            
+            // Safe scroll to processing section
+            safeScrollTo('processingState');
+            
+            try {
+                // Create form data
+                const videoFile = document.getElementById('videoFile').files[0];
+                if (!videoFile) {
+                    throw new Error('Please select a video file to analyze');
+                }
+                
+                const formData = new FormData();
+                formData.append('video_file', videoFile);
+                formData.append('language', document.getElementById('language').value);
+                formData.append('player_num', document.getElementById('playerNum').value);
+                formData.append('api_key', document.getElementById('apiKey').value);
+                formData.append('role', document.getElementById('role').value);
+        
+                // Make the API call
+                const response = await fetch('/generate_report', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'  // Ensure we get JSON response
+                    }
+                });
+        
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+        
+                // Handle the response as JSON
+                const responseData = await response.json();
+                
+                // Update progress to show processing
+                updateProgress(30, 'Processing video and audio...');
+                
+                // Simulate progress updates
+                setTimeout(() => updateProgress(60, 'Analyzing performance...'), 2000);
+                setTimeout(() => updateProgress(85, 'Generating report...'), 4000);
+                setTimeout(() => updateProgress(100, 'Report ready!'), 6000);
+        
+                // Process the report data
+                if (responseData.report_content) {
+                    reportContent.innerHTML = responseData.report_content.replace(/\n/g, '<br>');
+                    
+                    // Handle PDF download link if available and language is English
+                    const selectedLanguage = document.getElementById('language').value;
+                    if (responseData.pdf_report_path && selectedLanguage === 'en') {
+                        downloadPdfLink.href = responseData.pdf_report_path;
+                        downloadPdfLink.style.display = 'inline-block';
+                    } else {
+                        downloadPdfLink.style.display = 'none';
+                    }
+                    
+                    // Set report date and show the report with animation
+                    setReportDate();
+                    setTimeout(() => {
+                        showState(reportState);
+                        safeScrollTo('reportState');
+                    }, 1000); // Delay for better visual effect
+                } else {
+                    throw new Error('Failed to generate report content');
+                }
+        
+                } catch (error) {
+                    console.error('Error:', error);
+                    
+                    // Show error state with animation
+                    updateProgress(4, 'Error processing request', 0);
+                    progressText.textContent = 'An error occurred. Please try again.';
+                    progressBar.style.backgroundColor = '#ff6b6b';
+                    
+                    // Show error message in report state with animation
+                    reportContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Error:</strong> ${error.message || 'Failed to generate report. Please check your inputs and try again.'}
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        showState(reportState);
+                        safeScrollTo('reportState');
+                    }, 800);
+                }
+            });
+
+        // Smooth scrolling helper function
+        function safeScrollTo(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                setTimeout(() => {
+                    element.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }, 100);
+            }
+        }
+
+        // Add file preview functionality
+        document.getElementById('videoFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                const fileName = file.name;
+                
+                // Create a small preview notification
+                const notification = document.createElement('div');
+                notification.className = 'alert alert-info mt-2';
+                notification.style.fontSize = '0.9rem';
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(10px)';
+                notification.style.transition = 'all 0.3s ease';
+                notification.innerHTML = `
+                    <i class="fas fa-info-circle"></i>
+                    <strong>${fileName}</strong> (${fileSize} MB) selected for analysis
+                `;
+                
+                // Remove any existing notification
+                const existingNotification = this.parentNode.querySelector('.alert');
+                if (existingNotification) {
+                    existingNotification.remove();
+                }
+                
+                this.parentNode.appendChild(notification);
+                
+                // Trigger animation
+                setTimeout(() => {
+                    notification.style.opacity = '1';
+                    notification.style.transform = 'translateY(0)';
+                }, 10);
+                
+                // Auto-remove notification after 5 seconds with fade out
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.style.opacity = '0';
+                        notification.style.transform = 'translateY(-10px)';
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.remove();
+                            }
+                        }, 300);
+                    }
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

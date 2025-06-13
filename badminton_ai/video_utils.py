@@ -45,11 +45,14 @@ class VideoProcessor:
         
     def _init_pose_model(self):
         """Initialize MediaPipe pose model with optimized settings"""
+        # Use static_image_mode=True to avoid timestamp dependency issues
+        # This prevents the "Packet timestamp mismatch" errors
         return mp.solutions.pose.Pose(
-            static_image_mode=False,
+            static_image_mode=True,  # Changed to True to avoid timestamp dependency
             model_complexity=1,
             min_detection_confidence=0.5,
-            min_tracking_confidence=0.5
+            min_tracking_confidence=0.5,
+            # No need for tracking between frames when using static_image_mode=True
         )
 
     def process_video(
@@ -73,35 +76,23 @@ class VideoProcessor:
         """
         if max_workers is None:
             max_workers = min(32, (os.cpu_count() or 1) + 4)
-            
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Process video in batches
-            for batch in self._batch_frames(video_path, sample_rate, batch_size):
-                # Submit batch for processing
-                future_to_frame = {
-                    executor.submit(
-                        self._process_single_frame,
-                        frame,
-                        frame_num,
-                        timestamp
-                    ): frame_num
-                    for frame, frame_num, timestamp in zip(
-                        batch.frames, batch.frame_numbers, batch.timestamps
-                    )
-                }
-                
-                # Process completed tasks
-                for future in as_completed(future_to_frame):
-                    frame_num = future_to_frame[future]
-                    try:
-                        result = future.result()
-                        if result:
-                            yield result
-                    except Exception as e:
-                        print(f"Error processing frame {frame_num}: {str(e)}")
-                            
-                # Clear processed frames from memory
-                del batch.frames[:]
+        
+        # Process video in batches
+        for batch in self._batch_frames(video_path, sample_rate, batch_size):
+            # Process frames sequentially to avoid timestamp issues
+            # This is safer with static_image_mode=True
+            for frame, frame_num, timestamp in zip(
+                batch.frames, batch.frame_numbers, batch.timestamps
+            ):
+                try:
+                    result = self._process_single_frame(frame, frame_num, timestamp)
+                    if result:
+                        yield result
+                except Exception as e:
+                    print(f"Error processing frame {frame_num}: {str(e)}")
+                    
+            # Clear processed frames from memory
+            del batch.frames[:]
                 
     def _batch_frames(
         self,
@@ -150,15 +141,29 @@ class VideoProcessor:
             cv2.destroyAllWindows()
 
     def _preprocess_frame(self, frame: np.ndarray) -> np.ndarray:
-        """Preprocess frame"""
-        # Convert to RGB and resize
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        return cv2.resize(
-            frame_rgb,
-            self.target_size,
-            interpolation=cv2.INTER_AREA
-        )
+        """Convert frame to RGB and resize if needed"""
+        # Convert to RGB if needed (MediaPipe expects RGB)
+        if frame.shape[2] == 3:  # Check if frame has 3 channels
+            # Assume frames are in BGR format (OpenCV default) and convert to RGB
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        
+        # Resize to target size if specified
+        if hasattr(self, 'target_size') and self.target_size:
+            frame = cv2.resize(
+                frame,
+                self.target_size,
+                interpolation=cv2.INTER_AREA
+            )
+        # Otherwise use resize_factor if it's not 1.0
+        elif hasattr(self, 'resize_factor') and self.resize_factor != 1.0:
+            h, w = frame.shape[:2]
+            new_h, new_w = int(h * self.resize_factor), int(w * self.resize_factor)
+            frame = cv2.resize(frame, (new_w, new_h))
+            
+        return frame
 
+
+        
     def _process_single_frame(
         self,
         frame: np.ndarray,
@@ -167,11 +172,12 @@ class VideoProcessor:
     ) -> Optional[Dict]:
         """Process a single frame with pose detection"""
         try:
-            # Convert to BGR for MediaPipe
-            frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            # Convert to RGB for MediaPipe (MediaPipe expects RGB)
+            # No need to convert to BGR since we're already in RGB from _preprocess_frame
             
             # Process with MediaPipe
-            results = self.pose.process(frame_bgr)
+            # Since we're using static_image_mode=True, each frame is processed independently
+            results = self.pose.process(frame)
             
             if not results.pose_landmarks:
                 return None
@@ -273,8 +279,10 @@ def analyze_pose(frames: List[np.ndarray]) -> List[Dict[str, float]]:
     processor = VideoProcessor()
     results = []
     for i, frame in enumerate(frames):
-        # Convert frame to the format expected by the processor
-        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        result = processor._process_single_frame(frame_bgr, i, i/30.0)  # 30 FPS assumption
-        results.append(result or {})
+        # Ensure frame is in RGB format as expected by the processor with static_image_mode=True
+        if frame.shape[2] == 3:  # Check if frame has 3 channels
+            # Assume frames are in BGR format (OpenCV default) and convert to RGB
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            result = processor._process_single_frame(frame_rgb, i, i/30.0)  # 30 FPS assumption
+            results.append(result or {})
     return results

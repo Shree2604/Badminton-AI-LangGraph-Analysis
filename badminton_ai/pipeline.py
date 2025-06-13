@@ -1,6 +1,7 @@
 """LangGraph agentic pipeline orchestrating video, audio and report generation with parallel processing."""
 from langgraph.graph import StateGraph
-from typing import Dict, List, Any, TypedDict, Optional, Callable
+import operator
+from typing import Annotated, Dict, List, Any, TypedDict, Optional, Callable
 import asyncio
 import numpy as np
 from typing_extensions import TypedDict as TypedDictExt
@@ -33,7 +34,10 @@ class BadmintonState(TypedDict):
     pose: list
     transcript: str
     report: str
-    errors: List[Dict[str, str]]
+    errors: Annotated[List[Dict[str, str]], operator.add]
+    player_num: int
+    locale: str
+    progress: Annotated[List[Dict[str, str]], operator.add]
 
 def get_optimal_workers() -> int:
     """Calculate optimal number of worker processes based on system resources."""
@@ -71,21 +75,22 @@ async def process_video_frames(video_path: str, sample_rate: int = 5) -> List[Di
 def build_pipeline(api_key: str):
     graph = StateGraph(BadmintonState)
     
-    # Initialize state with errors list
+    # Initialize state with errors list and progress
     def init_state(state: BadmintonState) -> dict:
-        return {"errors": []}
+        return {"errors": [], "progress": []}
 
     # Node 1: Extract frames
     async def fn_extract_frames(state: BadmintonState) -> dict:
         """Extract video frames with progress tracking."""
         logger.info("[STEP] Extracting frames from video...")
+        current_progress = state.get("progress", []) + ["Extracting frames from video..."]
         try:
             frames = await asyncio.to_thread(
-                extract_frames, 
-                state["video_path"], 
+                extract_frames,
+                state["video_path"],
                 sample_rate=5
             )
-            return {"frames": frames, "errors": state.get("errors", [])}
+            return {"frames": frames, "errors": state.get("errors", []) + [], "progress": current_progress}
         except Exception as e:
             error_msg = f"Frame extraction failed: {str(e)}"
             logger.error(error_msg)
@@ -97,32 +102,35 @@ def build_pipeline(api_key: str):
         if not state.get("video_path"):
             error_msg = "No video path provided"
             logger.error(error_msg)
-            return {"errors": state.get("errors", []) + [{"step": "process_video", "error": error_msg}]}
+            return {"errors": state.get("errors", []) + [{"step": "process_video", "error": error_msg}], "progress": state.get("progress", [])}
 
         logger.info("[STEP] Processing video frames...")
+        current_progress = state.get("progress", []) + ["Processing video frames..."]
         try:
             # Process frames in parallel using VideoProcessor
             pose_results = await process_video_frames(
                 state["video_path"],
                 sample_rate=3  # Process every 3rd frame by default
             )
-            
+
             # Extract and format results
             if not pose_results:
                 raise ValueError("No pose detection results returned")
-                
+
             return {
                 "frames": [r["keypoints"] for r in pose_results if r],
                 "pose_metrics": [r.get("metrics", {}) for r in pose_results if r],
                 "timestamps": [r["timestamp"] for r in pose_results if r],
-                "errors": state.get("errors", [])
+                "errors": state.get("errors", []) + [],
+                "progress": current_progress
             }
-            
+
         except Exception as e:
             error_msg = f"Video processing failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
             return {
-                "errors": state.get("errors", []) + [{"step": "process_video", "error": error_msg}]
+                "errors": state.get("errors", []) + [{"step": "process_video", "error": error_msg}],
+                "progress": current_progress
             }
 
     # Node 3: Audio Processing
@@ -131,30 +139,32 @@ def build_pipeline(api_key: str):
         if not state.get("video_path"):
             error_msg = "No video path provided for audio extraction"
             logger.error(error_msg)
-            return {"errors": state.get("errors", []) + [{"step": "audio_processing", "error": error_msg}]}
+            return {"errors": state.get("errors", []) + [{"step": "audio_processing", "error": error_msg}], "progress": state.get("progress", [])}
 
         logger.info("[STEP] Processing audio...")
+        current_progress = state.get("progress", []) + ["Processing audio..."]
         try:
             # Extract audio
             audio_path = await asyncio.to_thread(
                 extract_audio,
                 state["video_path"]
             )
-            
+
             # Transcribe audio
             transcript = await asyncio.to_thread(
                 transcribe,
                 audio_path
             )
-            
-            return {"transcript": transcript, "errors": state.get("errors", [])}
-            
+
+            return {"transcript": transcript, "errors": state.get("errors", []) + [], "progress": current_progress}
+
         except Exception as e:
             error_msg = f"Audio processing failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
             return {
                 "transcript": "",
-                "errors": state.get("errors", []) + [{"step": "audio_processing", "error": error_msg}]
+                "errors": state.get("errors", []) + [{"step": "audio_processing", "error": error_msg}],
+                "progress": current_progress
             }
 
     # Node 4: Report Generation
@@ -163,39 +173,35 @@ def build_pipeline(api_key: str):
         if not state.get("frames") and not state.get("transcript"):
             error_msg = "No analysis results available for report generation"
             logger.error(error_msg)
-            return {"errors": state.get("errors", []) + [{"step": "report_generation", "error": error_msg}]}
+            return {"errors": state.get("errors", []) + [{"step": "report_generation", "error": error_msg}], "progress": state.get("progress", [])}
 
         logger.info("[STEP] Generating report...")
+        current_progress = state.get("progress", []) + ["Generating report..."]
         try:
             # Generate report using the report generator
             report = await asyncio.to_thread(
                 generate_report,
                 pose_metrics=state.get("pose_metrics", []),
                 transcription=state.get("transcript", ""),
-                role="coach",  # Default role, can be customized
-                player_num=1,    # Default player number, can be customized
-                locale="en"      # Default locale, can be customized
+                role=state.get("role", "coach"),  # Use role from state
+                player_num=state.get("player_num", 1),    # Use player_num from state
+                locale=state.get("locale", "en")      # Use locale from state
             )
-            
+
             return {
                 "report": report,
-                "errors": state.get("errors", [])
+                "errors": state.get("errors", []) + [],
+                "progress": current_progress
             }
-            
+
         except Exception as e:
             error_msg = f"Report generation failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
             return {
                 "report": "",
-                "errors": state.get("errors", []) + [{"step": "report_generation", "error": error_msg}]
+                "errors": state.get("errors", []) + [{"step": "report_generation", "error": error_msg}],
+                "progress": current_progress
             }
-
-    # Node 4: Report Generation
-    async def fn_generate_report(state: Dict[str, Any]) -> dict:
-        """Generate final report with error handling."""
-        logger.info("[STEP] Generating final report...")
-        try:
-            # Initialize Gemini with the API key if not already done
             from badminton_ai.report_generator import init_gemini
             init_gemini(api_key)
             
@@ -211,7 +217,7 @@ def build_pipeline(api_key: str):
         except Exception as e:
             error_msg = f"Report generation failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
-            return {"errors": state.get("errors", []) + [{"step": "report_generation", "error": error_msg}]}
+            return {"errors": state.get("errors", []) + [{"step": "report_generation", "error": error_msg}], "progress": current_progress}
 
     # Add nodes to graph with proper error handling
     graph.add_node("process_video_node", fn_process_video)

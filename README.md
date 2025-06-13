@@ -1,6 +1,6 @@
 # 🏸 Badminton AI LangGraph Analysis
 
-> **AI-powered badminton performance analysis using computer vision and LangGraph**
+> **AI-powered badminton performance analysis using computer vision, LangGraph orchestration, and Gemini AI**
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue?logo=python)](https://python.org)
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
@@ -10,18 +10,30 @@
 ## 🚀 What it does
 
 Transform your badminton videos into detailed performance insights with:
-- **Real-time pose detection** (33 body points tracking)
-- **AI-generated reports** for coaches, players & parents  
+- **Real-time pose detection** with MediaPipe (tracking 33 body keypoints)
+- **LangGraph orchestration** for linear pipeline processing
+- **AI-generated reports** customized for coaches, players & parents  
 - **Multi-language support** (English, Hindi, Tamil, Telugu, Kannada)
-- **Video annotations** with movement analysis
-- **Performance metrics** and improvement recommendations
+- **Video annotations** with pose tracking visualization
+- **Performance metrics** including elbow angles and wrist distances
 - **PDF report generation** with professional formatting
-- **Parallel processing** for faster analysis
+
+<div align="center">
+  <img src="./output_videos/sample_analysis.gif" alt="Pose Detection Demo" width="600"/>
+  <p><em>Real-time pose detection and movement analysis on badminton player</em></p>
+</div>
+
+## 🏗️ System Architecture
+
+<div align="center">
+  <img src="./docs/architecture.png" alt="System Architecture" width="400"/>
+  <p><em>Linear pipeline architecture with LangGraph orchestration</em></p>
+</div>
 
 ## 🛠️ Prerequisites
 
 - Python 3.8 or higher
-- FFmpeg (for video processing)
+- OpenCV and MediaPipe for video processing
 - Google Gemini API Key (for AI analysis)
 - CUDA-compatible GPU (recommended for faster processing)
 
@@ -63,92 +75,42 @@ python main.py --video_path your_match.mp4
 # With additional options
 python main.py \
   --video_path your_match.mp4 \
-  --num_players 2 \
-  --roles coach,student,parent \
+  --roles coach,student \
   --language en \
   --output_dir ./analysis_results
 ```
+
+## 🌐 Web Application Deployment
+
+### Local Deployment
+
+```bash
+# Navigate to the web app directory
+cd web_app
+
+# Install web app dependencies
+pip install -r requirements.txt
+
+# Run the Flask application
+python app.py
+```
+
+```
+Access the web interface at http://localhost:5000
+
 
 ## 🎯 Key Features
 
 | Feature | Description |
 |---------|-------------|
-| 🎥 **Video Processing** | Extract frames, detect poses, track movements |
-| 📊 **Performance Analytics** | Speed, accuracy, positioning metrics |
+| 🎥 **Video Processing** | MediaPipe pose detection, frame extraction, RGB conversion |
+| 📊 **Performance Metrics** | Elbow angles, wrist distances, pose tracking |
 | 📝 **Smart Reports** | Role-based insights (coach/player/parent) |
 | 🌍 **Multi-language** | Reports in 5+ languages |
-| ⚡ **Parallel Processing** | Fast analysis with LangGraph workflows |
-| 📄 **PDF Reports** | Professional PDF generation with page numbers |
+| ⚡ **LangGraph Pipeline** | Linear orchestration with state management |
+| 📄 **PDF Reports** | Professional PDF generation with multilingual support |
 | 🎯 **Pose Visualization** | Annotated video with keypoint tracking |
-| 🔊 **Audio Analysis** | Shot detection and audio processing |
-
-## 🏗️ System Architecture
-
-<div align="center">
-  <img src="./docs/architecture.png" alt="System Architecture" width="400"/>
-  <p><em>High-level architecture of the Badminton AI Analysis Tool</em></p>
-</div>
-
-## 🎮 Demo
-
-<div align="center">
-  <img src="./output_videos/sample_analysis.gif" alt="Pose Detection Demo" width="600"/>
-  <p><em>Real-time pose detection and movement analysis on badminton player</em></p>
-</div>
-
-## 📁 Project Structure
-
-```
-Badminton-AI-LangGraph-Analysis/
-├── badminton_ai/           # Core analysis modules
-│   ├── pipeline.py         # LangGraph workflow
-│   ├── video_utils.py      # Pose detection & processing
-│   └── report_generator.py # AI report generation
-├── main.py                 # CLI interface
-└── analyze_sample.py       # Quick demo script
-```
-
-## 🚀 Advanced Usage
-
-### Command Line Arguments
-
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `--video_path` | Path to the input video file | Required |
-| `--num_players` | Number of players in the video (1 or 2) | 1 |
-| `--roles` | Comma-separated roles for reports (coach,student,parent) | coach |
-| `--language` | Report language (en, hi, ta, te, kn) | en |
-| `--output_dir` | Directory to save analysis results | ./output |
-| `--api_key` | Gemini API key (can also use GEMINI_API_KEY env var) | |
-| `--yes` | Skip confirmation prompts | False |
-
-### Example Commands
-
-**Basic Analysis with Default Settings**
-```bash
-python main.py --video_path match.mp4
-```
-
-**Multi-Player Analysis**
-```bash
-python main.py --video_path doubles_match.mp4 --num_players 2
-```
-
-**Generate Reports in Hindi**
-```bash
-python main.py --video_path match.mp4 --language hi --roles coach,student
-```
-
-**Custom Output Directory**
-```bash
-python main.py --video_path match.mp4 --output_dir ./my_analysis_results
-```
-
-**Using Environment Variable for API Key**
-```bash
-export GEMINI_API_KEY="your-api-key-here"
-python main.py --video_path match.mp4
-```
+| 🔊 **Audio Analysis** | Speech transcription with Google Web Speech API |
 
 ## 📂 Output Structure
 
@@ -158,7 +120,6 @@ After analysis, the following files will be generated in the output directory:
 output/
 ├── videos/               # Annotated video with pose tracking
 │   └── match_analysis.mp4
-├── frames/               # Extracted frames (if enabled)
 ├── reports/              # Generated reports
 │   ├── coach/           # Coach-specific reports
 │   │   ├── player1_coach_report.pdf
@@ -170,14 +131,6 @@ output/
     └── metrics/        # Performance metrics
 ```
 
-## 📊 Report Features
-
-- **Professional PDF Formatting** with page numbers and headers
-- **Role-Specific Content** tailored for different audiences
-- **Multi-language Support** with proper text rendering
-- **Visual Elements** including charts and annotated frames
-- **Actionable Insights** with improvement recommendations
-
 ## 🖥️ System Requirements
 
 - **OS**: Windows 10/11, macOS 10.15+, or Linux
@@ -186,42 +139,11 @@ output/
 - **GPU**: NVIDIA GPU with CUDA support (recommended)
 - **Python**: 3.8 or higher
 
-## 🐛 Troubleshooting
-
-**1. Dependencies Installation Issues**
-```bash
-# If you encounter any installation errors, try:
-pip install --upgrade pip setuptools wheel
-```
-
-**2. FFmpeg Not Found**
-- **Windows**: Download from https://ffmpeg.org/download.html and add to PATH
-- **macOS**: `brew install ffmpeg`
-- **Ubuntu/Debian**: `sudo apt install ffmpeg`
-
-**3. CUDA Errors**
-If you don't have a compatible GPU, you can force CPU mode by modifying the code to use CPU for inference.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- MediaPipe for pose estimation
-- Google Gemini for AI analysis
-- ReportLab for PDF generation
-- OpenCV for computer vision processing
-
 ## 🌟 Features in Development
 
-- [ ] Web interface for easier interaction
+- [ ] Strategy Agent implementation for tactical analysis
+- [ ] Advanced shot recognition and classification
 - [ ] Real-time analysis with webcam input
-- [ ] Advanced shot recognition
 - [ ] Player performance comparison
 - [ ] Mobile app integration
 
