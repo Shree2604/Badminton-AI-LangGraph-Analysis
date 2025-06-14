@@ -1,24 +1,29 @@
 <div align="center">
-
-# 🏸 Badminton AI LangGraph Analysis 
-
-</div>
-
-<div align="center">
+  <h1>🏸 Badminton AI LangGraph Analysis</h1>
+  <p>
+    <a href="https://github.com/Shree2604/Badminton-AI-LangGraph-Analysis">
+      <img src="https://img.shields.io/badge/⭐-Star%20this%20repo-yellow?style=for-the-badge" alt="⭐ Star this repo">
+    </a>
+  </p>
+  <p><strong>AI-powered badminton performance analysis using computer vision, LangGraph orchestration, and Gemini AI</strong></p>
+  <p>
+    <a href="https://python.org">
+      <img src="https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white" alt="Python 3.8+">
+    </a>
+    <a href="LICENSE">
+      <img src="https://img.shields.io/badge/License-MIT-green?logo=opensourceinitiative&logoColor=white" alt="MIT License">
+    </a>
+    <a href="https://github.com/Shree2604/Badminton-AI-LangGraph-Analysis/pulls">
+      <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?logo=github" alt="PRs Welcome">
+    </a>
+  </p>
   
-[![⭐ Star this repo](https://img.shields.io/badge/⭐-Star%20this%20repo-yellow?style=for-the-badge)](https://github.com/Shree2604/Badminton-AI-LangGraph-Analysis)
-
-**AI-powered badminton performance analysis using computer vision, LangGraph orchestration, and Gemini AI**
-
-[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white)](https://python.org)
-[![MIT License](https://img.shields.io/badge/License-MIT-green?logo=opensourceinitiative&logoColor=white)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?logo=github)](https://github.com/Shree2604/Badminton-AI-LangGraph-Analysis/pulls)
-
-
-<img src="./output_videos/sample_analysis.gif" alt="Pose Detection Demo" width="600"/>
-
-*Real-time pose detection and movement analysis on badminton players*
-
+  <!-- YouTube Video Link with Thumbnail -->
+  <a href="https://www.youtube.com/watch?v=_k7m8tg-inw">
+    <img src="https://img.youtube.com/vi/_k7m8tg-inw/maxresdefault.jpg" alt="Pose Detection Demo" width="600">
+  </a>
+  
+  <p><em>🎥 Click above to watch: Revolutionizing Badminton Training with AI: A Deep Dive into LangGraph-Powered Analysis</em></p>
 </div>
 
 
